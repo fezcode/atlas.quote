@@ -4,6 +4,19 @@
 
 **atlas.quote** is a beautiful cowsay-like quote generator for the terminal with a wise owl and a rainbow color mode. Part of the **Atlas Suite**, it provides inspiring quotes straight to stdout inside a neat unicode text bubble.
 
+```text
+ ╭────────────────────────────────────╮
+ │ What we do now echoes in eternity. │
+ │                                    │
+ │                  — Marcus Aurelius │
+ ╰─┬──────────────────────────────────╯
+   │
+   ╰─>  /\_/\
+       ((@v@))
+       ():::()
+        VV-VV
+```
+
 ## ✨ Features
 
 - 🦉 **The Wise Owl:** Quotes are beautifully wrapped in an auto-sizing unicode text bubble with an ASCII owl.
