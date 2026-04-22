@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -51,22 +50,100 @@ func fetchQuote() Quote {
 	return fallbackQuotes[rand.Intn(len(fallbackQuotes))]
 }
 
-func displayQuote(q Quote) {
-	fmt.Printf("\n\"%s\"\n  — %s\n\n", q.Text, q.Author)
+func rainbowPrint(text string) {
+	colors := []int{31, 33, 32, 36, 34, 35} // Red, Yellow, Green, Cyan, Blue, Magenta
+	colorIndex := 0
+
+	for _, char := range text {
+		// Do not colorize whitespace characters to avoid weird background issues in some terminals
+		if char == '\n' || char == ' ' || char == '\r' || char == '\t' {
+			fmt.Print(string(char))
+			continue
+		}
+		fmt.Printf("\033[%dm%c\033[0m", colors[colorIndex%len(colors)], char)
+		colorIndex++
+	}
+}
+
+func wrapText(text string, width int) []string {
+	var lines []string
+	words := strings.Fields(text)
+	if len(words) == 0 {
+		return lines
+	}
+
+	currentLine := words[0]
+	for _, word := range words[1:] {
+		if len(currentLine)+1+len(word) <= width {
+			currentLine += " " + word
+		} else {
+			lines = append(lines, currentLine)
+			currentLine = word
+		}
+	}
+	lines = append(lines, currentLine)
+	return lines
+}
+
+func buildBubble(text, author string) string {
+	maxWidth := 50
+	lines := wrapText(text, maxWidth)
+
+	authorLine := fmt.Sprintf("— %s", author)
+	if len(authorLine) > maxWidth {
+		maxWidth = len(authorLine)
+	}
+	for _, line := range lines {
+		if len(line) > maxWidth {
+			maxWidth = len(line)
+		}
+	}
+
+	var sb strings.Builder
+	sb.WriteString(" " + strings.Repeat("_", maxWidth+2) + "\n")
+
+	for i, line := range lines {
+		padding := strings.Repeat(" ", maxWidth-len(line))
+		if len(lines) == 1 {
+			sb.WriteString(fmt.Sprintf("< %s%s >\n", line, padding))
+		} else if i == 0 {
+			sb.WriteString(fmt.Sprintf("/ %s%s \\\n", line, padding))
+		} else if i == len(lines)-1 {
+			sb.WriteString(fmt.Sprintf("\\ %s%s /\n", line, padding))
+		} else {
+			sb.WriteString(fmt.Sprintf("| %s%s |\n", line, padding))
+		}
+	}
+
+	// Add an empty line before the author
+	sb.WriteString(fmt.Sprintf("| %s |\n", strings.Repeat(" ", maxWidth)))
+
+	// Add author aligned to the right
+	authorPadding := strings.Repeat(" ", maxWidth-len(authorLine))
+	sb.WriteString(fmt.Sprintf("| %s%s |\n", authorPadding, authorLine))
+
+	sb.WriteString(" " + strings.Repeat("-", maxWidth+2) + "\n")
+	sb.WriteString("        \\   ^__^\n")
+	sb.WriteString("         \\  (oo)\\_______\n")
+	sb.WriteString("            (__)\\       )\\/\\\n")
+	sb.WriteString("                ||----w |\n")
+	sb.WriteString("                ||     ||\n")
+
+	return sb.String()
 }
 
 func printHelp() {
-	fmt.Printf("atlas.quote v%s - An interactive and non-interactive quote generator\n\n", Version)
+	fmt.Printf("atlas.quote v%s - A cowsay-like quote generator\n\n", Version)
 	fmt.Println("Usage:")
 	fmt.Println("  atlas.quote [flags]")
 	fmt.Println("\nFlags:")
 	fmt.Println("  -h, --help       Show this help message")
 	fmt.Println("  -v, --version    Show version number")
-	fmt.Println("  -i, --interactive Start in interactive mode")
+	fmt.Println("  -c, --color      Output the quote in rainbow colors")
 }
 
 func main() {
-	interactive := false
+	colorMode := false
 
 	for _, arg := range os.Args[1:] {
 		if arg == "-h" || arg == "--help" {
@@ -77,33 +154,17 @@ func main() {
 			fmt.Printf("atlas.quote v%s\n", Version)
 			return
 		}
-		if arg == "-i" || arg == "--interactive" {
-			interactive = true
+		if arg == "-c" || arg == "--color" {
+			colorMode = true
 		}
 	}
 
-	if !interactive {
-		q := fetchQuote()
-		displayQuote(q)
-		return
-	}
+	q := fetchQuote()
+	bubble := buildBubble(q.Text, q.Author)
 
-	// Interactive Mode
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("Welcome to atlas.quote v%s (Interactive Mode)\n", Version)
-	fmt.Println("Press Enter to get a new quote, or type 'q' to quit.")
-
-	for {
-		fmt.Print("> ")
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input)
-
-		if strings.ToLower(input) == "q" || strings.ToLower(input) == "quit" {
-			fmt.Println("Goodbye!")
-			break
-		}
-
-		q := fetchQuote()
-		displayQuote(q)
+	if colorMode {
+		rainbowPrint(bubble)
+	} else {
+		fmt.Print(bubble)
 	}
 }
