@@ -24,3 +24,8 @@ Rainbow mode:
 ```sh
 ./atlas.quote -c
 ```
+
+Custom quote:
+```sh
+./atlas.quote -m "The cake is a lie." -s "GLaDOS"
+```

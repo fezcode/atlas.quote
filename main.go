@@ -141,26 +141,46 @@ func printHelp() {
 	fmt.Println("  -h, --help       Show this help message")
 	fmt.Println("  -v, --version    Show version number")
 	fmt.Println("  -c, --color      Output the quote in rainbow colors")
+	fmt.Println("  -m, --message    Provide a custom quote message")
+	fmt.Println("  -s, --said-by    Provide a custom author for the quote (used with -m)")
 }
 
 func main() {
 	colorMode := false
+	customMessage := ""
+	customAuthor := "Anonymous"
 
-	for _, arg := range os.Args[1:] {
+	args := os.Args[1:]
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
 		if arg == "-h" || arg == "--help" {
 			printHelp()
 			return
-		}
-		if arg == "-v" || arg == "--version" {
+		} else if arg == "-v" || arg == "--version" {
 			fmt.Printf("atlas.quote v%s\n", Version)
 			return
-		}
-		if arg == "-c" || arg == "--color" {
+		} else if arg == "-c" || arg == "--color" {
 			colorMode = true
+		} else if arg == "-m" || arg == "--message" {
+			if i+1 < len(args) {
+				customMessage = args[i+1]
+				i++
+			}
+		} else if arg == "-s" || arg == "--said-by" {
+			if i+1 < len(args) {
+				customAuthor = args[i+1]
+				i++
+			}
 		}
 	}
 
-	q := fetchQuote()
+	var q Quote
+	if customMessage != "" {
+		q = Quote{Text: customMessage, Author: customAuthor}
+	} else {
+		q = fetchQuote()
+	}
+
 	bubble := buildBubble(q.Text, q.Author)
 
 	if colorMode {
