@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 var Version = "dev" // Overwritten by gobake build
@@ -77,7 +78,7 @@ func wrapText(text string, maxW int) []string {
 	currentLine := words[0]
 	for _, word := range words[1:] {
 		// +1 for the space
-		if len(currentLine)+1+len(word) <= maxW {
+		if utf8.RuneCountInString(currentLine)+1+utf8.RuneCountInString(word) <= maxW {
 			currentLine += " " + word
 		} else {
 			lines = append(lines, currentLine)
@@ -94,10 +95,10 @@ func buildBubble(text, author string) string {
 	authorLine := fmt.Sprintf("— %s", author)
 
 	// Determine the actual maximum width required
-	actualWidth := len(authorLine)
+	actualWidth := utf8.RuneCountInString(authorLine)
 	for _, line := range lines {
-		if len(line) > actualWidth {
-			actualWidth = len(line)
+		if utf8.RuneCountInString(line) > actualWidth {
+			actualWidth = utf8.RuneCountInString(line)
 		}
 	}
 
@@ -108,7 +109,7 @@ func buildBubble(text, author string) string {
 
 	// Text lines
 	for _, line := range lines {
-		padding := strings.Repeat(" ", actualWidth-len(line))
+		padding := strings.Repeat(" ", actualWidth-utf8.RuneCountInString(line))
 		sb.WriteString(fmt.Sprintf(" │ %s%s │\n", line, padding))
 	}
 
@@ -116,7 +117,7 @@ func buildBubble(text, author string) string {
 	sb.WriteString(fmt.Sprintf(" │ %s │\n", strings.Repeat(" ", actualWidth)))
 
 	// Author line (right-aligned)
-	authorPadding := strings.Repeat(" ", actualWidth-len(authorLine))
+	authorPadding := strings.Repeat(" ", actualWidth-utf8.RuneCountInString(authorLine))
 	sb.WriteString(fmt.Sprintf(" │ %s%s │\n", authorPadding, authorLine))
 
 	// Bottom border with a speech pointer
