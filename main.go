@@ -25,6 +25,8 @@ var fallbackQuotes = []Quote{
 	{"You only live once, but if you do it right, once is enough.", "Mae West"},
 	{"In three words I can sum up everything I've learned about life: it goes on.", "Robert Frost"},
 	{"To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.", "Ralph Waldo Emerson"},
+	{"The mind is everything. What you think you become.", "Buddha"},
+	{"The unexamined life is not worth living.", "Socrates"},
 }
 
 func init() {
@@ -51,11 +53,11 @@ func fetchQuote() Quote {
 }
 
 func rainbowPrint(text string) {
-	colors := []int{31, 33, 32, 36, 34, 35} // Red, Yellow, Green, Cyan, Blue, Magenta
+	// Standard ANSI foreground colors for a rainbow effect
+	colors := []int{31, 33, 32, 36, 34, 35}
 	colorIndex := 0
 
 	for _, char := range text {
-		// Do not colorize whitespace characters to avoid weird background issues in some terminals
 		if char == '\n' || char == ' ' || char == '\r' || char == '\t' {
 			fmt.Print(string(char))
 			continue
@@ -65,7 +67,7 @@ func rainbowPrint(text string) {
 	}
 }
 
-func wrapText(text string, width int) []string {
+func wrapText(text string, maxW int) []string {
 	var lines []string
 	words := strings.Fields(text)
 	if len(words) == 0 {
@@ -74,7 +76,8 @@ func wrapText(text string, width int) []string {
 
 	currentLine := words[0]
 	for _, word := range words[1:] {
-		if len(currentLine)+1+len(word) <= width {
+		// +1 for the space
+		if len(currentLine)+1+len(word) <= maxW {
 			currentLine += " " + word
 		} else {
 			lines = append(lines, currentLine)
@@ -86,54 +89,51 @@ func wrapText(text string, width int) []string {
 }
 
 func buildBubble(text, author string) string {
-	maxWidth := 50
-	lines := wrapText(text, maxWidth)
-
+	wrapWidth := 60
+	lines := wrapText(text, wrapWidth)
 	authorLine := fmt.Sprintf("— %s", author)
-	if len(authorLine) > maxWidth {
-		maxWidth = len(authorLine)
-	}
+
+	// Determine the actual maximum width required
+	actualWidth := len(authorLine)
 	for _, line := range lines {
-		if len(line) > maxWidth {
-			maxWidth = len(line)
+		if len(line) > actualWidth {
+			actualWidth = len(line)
 		}
 	}
 
 	var sb strings.Builder
-	sb.WriteString(" " + strings.Repeat("_", maxWidth+2) + "\n")
 
-	for i, line := range lines {
-		padding := strings.Repeat(" ", maxWidth-len(line))
-		if len(lines) == 1 {
-			sb.WriteString(fmt.Sprintf("< %s%s >\n", line, padding))
-		} else if i == 0 {
-			sb.WriteString(fmt.Sprintf("/ %s%s \\\n", line, padding))
-		} else if i == len(lines)-1 {
-			sb.WriteString(fmt.Sprintf("\\ %s%s /\n", line, padding))
-		} else {
-			sb.WriteString(fmt.Sprintf("| %s%s |\n", line, padding))
-		}
+	// Top border
+	sb.WriteString(fmt.Sprintf(" ╭%s╮\n", strings.Repeat("─", actualWidth+2)))
+
+	// Text lines
+	for _, line := range lines {
+		padding := strings.Repeat(" ", actualWidth-len(line))
+		sb.WriteString(fmt.Sprintf(" │ %s%s │\n", line, padding))
 	}
 
-	// Add an empty line before the author
-	sb.WriteString(fmt.Sprintf("| %s |\n", strings.Repeat(" ", maxWidth)))
+	// Empty line separator
+	sb.WriteString(fmt.Sprintf(" │ %s │\n", strings.Repeat(" ", actualWidth)))
 
-	// Add author aligned to the right
-	authorPadding := strings.Repeat(" ", maxWidth-len(authorLine))
-	sb.WriteString(fmt.Sprintf("| %s%s |\n", authorPadding, authorLine))
+	// Author line (right-aligned)
+	authorPadding := strings.Repeat(" ", actualWidth-len(authorLine))
+	sb.WriteString(fmt.Sprintf(" │ %s%s │\n", authorPadding, authorLine))
 
-	sb.WriteString(" " + strings.Repeat("-", maxWidth+2) + "\n")
-	sb.WriteString("        \\   ^__^\n")
-	sb.WriteString("         \\  (oo)\\_______\n")
-	sb.WriteString("            (__)\\       )\\/\\\n")
-	sb.WriteString("                ||----w |\n")
-	sb.WriteString("                ||     ||\n")
+	// Bottom border with a speech pointer
+	sb.WriteString(fmt.Sprintf(" ╰─┬%s╯\n", strings.Repeat("─", actualWidth)))
+
+	// The wise owl ascii art
+	sb.WriteString("   │\n")
+	sb.WriteString("   ╰─>  /\\_/\\\n")
+	sb.WriteString("       ((@v@))\n")
+	sb.WriteString("       ():::()\n")
+	sb.WriteString("        VV-VV\n")
 
 	return sb.String()
 }
 
 func printHelp() {
-	fmt.Printf("atlas.quote v%s - A cowsay-like quote generator\n\n", Version)
+	fmt.Printf("atlas.quote v%s - A beautiful quote generator\n\n", Version)
 	fmt.Println("Usage:")
 	fmt.Println("  atlas.quote [flags]")
 	fmt.Println("\nFlags:")
