@@ -1,0 +1,4 @@
+(name) atlas.quote
+(version) 0.1.0
+(description) An interactive and non-interactive quote generator for the terminal.
+(license) MIT
